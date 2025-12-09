@@ -1,0 +1,28 @@
+{
+  "name": "translation-jp-to-cn",
+  "version": "1.0.0",
+  "description": "AI-powered Japanese to Chinese business translation web application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "deploy": "wrangler deploy",
+    "deploy:worker": "wrangler deploy cloudflare-worker-with-ratelimit.js"
+  },
+  "keywords": [
+    "translation",
+    "japanese",
+    "chinese",
+    "n8n",
+    "ai",
+    "cloudflare"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/translation.git"
+  }
+}

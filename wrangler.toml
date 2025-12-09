@@ -1,0 +1,36 @@
+# Cloudflare Wrangler Configuration
+# For deploying Workers to Cloudflare
+
+name = "translation-proxy"
+main = "cloudflare-worker-with-ratelimit.js"
+compatibility_date = "2024-12-09"
+
+# Account details (fill in after creating Cloudflare account)
+# account_id = "your-account-id-here"
+
+# KV Namespace Bindings
+[[kv_namespaces]]
+binding = "TRANSLATION_KV"
+id = "your-kv-namespace-id-here"
+# To get the KV namespace ID:
+# 1. Go to Cloudflare Dashboard > Workers & Pages > KV
+# 2. Create a namespace named "TRANSLATION_KV"
+# 3. Copy the namespace ID and paste it above
+
+# Environment variables (optional)
+# [env.production]
+# name = "translation-proxy-prod"
+
+# Development configuration
+# [env.dev]
+# name = "translation-proxy-dev"
+
+# Routes (optional - if you want to use a custom domain)
+# routes = [
+#   { pattern = "translate.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
+
+# Deployment instructions:
+# 1. Install wrangler: npm install -g wrangler
+# 2. Login: wrangler login
+# 3. Deploy: wrangler deploy
