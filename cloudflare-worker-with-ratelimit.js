@@ -4,10 +4,17 @@
  * This version includes IP-based rate limiting to prevent abuse
  */
 
+// CORS配置 - 限制到你的域名
+const ALLOWED_ORIGINS = [
+    'https://translation.demo.nebulainfinity.com',
+    'http://localhost:8000', // 本地开发
+    'http://127.0.0.1:8000'  // 本地开发
+];
+
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*', // 生产环境改为: 'https://your-domain.com'
+    'Access-Control-Allow-Origin': '*', // 会在handleRequest中动态设置
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, CF-Turnstile-Response',
     'Access-Control-Max-Age': '86400',
 };
 
@@ -82,12 +89,67 @@ async function checkRateLimit(ip, env) {
 }
 
 /**
+ * Verify Cloudflare Turnstile token
+ */
+async function verifyTurnstile(token, ip, env) {
+    // Skip verification if Turnstile is not configured
+    const turnstileSecret = await env.TRANSLATION_KV.get('turnstile_secret_key');
+    if (!turnstileSecret) {
+        console.log('Turnstile not configured, skipping verification');
+        return true; // Allow if not configured
+    }
+
+    const formData = new FormData();
+    formData.append('secret', turnstileSecret);
+    formData.append('response', token);
+    formData.append('remoteip', ip);
+
+    try {
+        const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const outcome = await result.json();
+        console.log('Turnstile verification result:', outcome.success);
+        return outcome.success;
+    } catch (error) {
+        console.error('Turnstile verification error:', error);
+        return false;
+    }
+}
+
+/**
+ * Check if origin is allowed
+ */
+function isOriginAllowed(origin) {
+    if (!origin) return false;
+    return ALLOWED_ORIGINS.includes(origin);
+}
+
+/**
+ * Get CORS headers for specific origin
+ */
+function getCorsHeaders(origin) {
+    if (isOriginAllowed(origin)) {
+        return {
+            ...corsHeaders,
+            'Access-Control-Allow-Origin': origin,
+        };
+    }
+    return corsHeaders;
+}
+
+/**
  * Handle incoming requests
  */
 async function handleRequest(request, env) {
+    const origin = request.headers.get('Origin');
+    const responseCorsHeaders = getCorsHeaders(origin);
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, { headers: corsHeaders });
+        return new Response(null, { headers: responseCorsHeaders });
     }
 
     // Only allow POST
@@ -96,14 +158,48 @@ async function handleRequest(request, env) {
             JSON.stringify({ error: 'Method not allowed' }),
             {
                 status: 405,
-                headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
             }
         );
     }
 
     try {
+        // Check Origin/Referer
+        const referer = request.headers.get('Referer');
+        if (!isOriginAllowed(origin) && !referer?.startsWith('https://translation.demo.nebulainfinity.com')) {
+            console.log('Rejected request from unauthorized origin:', origin, referer);
+            return new Response(
+                JSON.stringify({
+                    error: 'Unauthorized origin',
+                    message: '不正なアクセス元です。'
+                }),
+                {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
+                }
+            );
+        }
+
         // Get client IP
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+        // Verify Turnstile token
+        const turnstileToken = request.headers.get('CF-Turnstile-Response');
+        if (turnstileToken) {
+            const isValid = await verifyTurnstile(turnstileToken, ip, env);
+            if (!isValid) {
+                return new Response(
+                    JSON.stringify({
+                        error: 'Turnstile verification failed',
+                        message: '認証に失敗しました。ページを更新してください。'
+                    }),
+                    {
+                        status: 403,
+                        headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
+                    }
+                );
+            }
+        }
 
         // Check rate limit
         const rateLimitResult = await checkRateLimit(ip, env);
@@ -124,7 +220,7 @@ async function handleRequest(request, env) {
                         'X-RateLimit-Remaining': '0',
                         'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
                         'Retry-After': retryAfter.toString(),
-                        ...corsHeaders,
+                        ...responseCorsHeaders,
                     },
                 }
             );
@@ -139,7 +235,7 @@ async function handleRequest(request, env) {
                 JSON.stringify({ error: 'Missing required field: 問い合わせ内容' }),
                 {
                     status: 400,
-                    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                    headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
                 }
             );
         }
@@ -155,7 +251,7 @@ async function handleRequest(request, env) {
                 JSON.stringify({ error: 'Service configuration error' }),
                 {
                     status: 500,
-                    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                    headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
                 }
             );
         }
@@ -200,7 +296,7 @@ async function handleRequest(request, env) {
                     }),
                     {
                         status: 500,
-                        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                        headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
                     }
                 );
             }
@@ -211,7 +307,7 @@ async function handleRequest(request, env) {
                     'Content-Type': 'application/json',
                     'X-RateLimit-Limit': RATE_LIMIT.maxRequests.toString(),
                     'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-                    ...corsHeaders,
+                    ...responseCorsHeaders,
                 },
             });
         } catch (fetchError) {
@@ -225,7 +321,7 @@ async function handleRequest(request, env) {
                     }),
                     {
                         status: 504,
-                        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                        headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
                     }
                 );
             }
@@ -242,7 +338,7 @@ async function handleRequest(request, env) {
             }),
             {
                 status: 500,
-                headers: { 'Content-Type': 'application/json', ...corsHeaders },
+                headers: { 'Content-Type': 'application/json', ...responseCorsHeaders },
             }
         );
     }

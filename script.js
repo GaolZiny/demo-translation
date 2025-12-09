@@ -2,12 +2,16 @@
 const CONFIG = {
     // Webhook URL for the translation workflow
     webhookUrl: 'https://translation-proxy.gaol-ziny.workers.dev',
-    // For testing, use: https://zg-n8n.zglife.qzz.io/webhook/e097559a-eaad-4717-8985-8bfe51ff3365
-    // https://translation-proxy.gaol-ziny.workers.dev
     fieldName: '問い合わせ内容',
     // Timeout in milliseconds (60 seconds)
-    timeout: 60000
+    timeout: 60000,
+    // Cloudflare Turnstile Site Key - 从Cloudflare Dashboard获取
+    // 临时使用测试key，请替换为你自己的
+    turnstileSiteKey: '0x4AAAAAACFmL3ZaWGmz1qr-'
 };
+
+// Turnstile widget ID
+let turnstileWidgetId = null;
 
 // DOM Elements
 const elements = {
@@ -74,6 +78,9 @@ async function handleTranslate() {
         elements.translateBtn.disabled = false;
         elements.translateBtn.classList.remove('btn-loading'); // Remove loading class
         elements.clearBtn.disabled = false;
+
+        // Reset Turnstile widget for next translation
+        resetTurnstile();
     }
 }
 
@@ -86,11 +93,22 @@ async function callN8nWorkflow(text) {
     const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
 
     try {
+        // Get Turnstile token if widget is rendered
+        const turnstileToken = turnstileWidgetId !== null ?
+            window.turnstile?.getResponse(turnstileWidgetId) : null;
+
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Add Turnstile token if available
+        if (turnstileToken) {
+            headers['CF-Turnstile-Response'] = turnstileToken;
+        }
+
         const response = await fetch(CONFIG.webhookUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({
                 [CONFIG.fieldName]: text
             }),
@@ -293,8 +311,49 @@ function init() {
     // Focus input
     elements.japaneseInput.focus();
 
+    // Initialize Turnstile widget
+    initTurnstile();
+
     console.log('Translation app initialized');
     console.log('Webhook URL:', CONFIG.webhookUrl);
+}
+
+// Initialize Cloudflare Turnstile
+function initTurnstile() {
+    // Wait for Turnstile API to load
+    if (typeof window.turnstile === 'undefined') {
+        console.log('Turnstile API not loaded yet, retrying...');
+        setTimeout(initTurnstile, 500);
+        return;
+    }
+
+    try {
+        turnstileWidgetId = window.turnstile.render('#turnstileWidget', {
+            sitekey: CONFIG.turnstileSiteKey,
+            theme: 'dark',
+            size: 'normal',
+            callback: function (token) {
+                console.log('Turnstile verification successful');
+            },
+            'error-callback': function () {
+                console.error('Turnstile verification error');
+            },
+            'expired-callback': function () {
+                console.log('Turnstile token expired, resetting...');
+                window.turnstile.reset(turnstileWidgetId);
+            }
+        });
+        console.log('Turnstile widget initialized:', turnstileWidgetId);
+    } catch (error) {
+        console.error('Failed to initialize Turnstile:', error);
+    }
+}
+
+// Reset Turnstile after successful translation
+function resetTurnstile() {
+    if (turnstileWidgetId !== null && typeof window.turnstile !== 'undefined') {
+        window.turnstile.reset(turnstileWidgetId);
+    }
 }
 
 // Run initialization when DOM is ready
