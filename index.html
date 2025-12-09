@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,21 @@
     <meta name="description" content="Professional Japanese to Chinese business translation service powered by AI">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="background-gradient"></div>
-    
+
     <main class="container">
         <header class="header">
             <div class="logo-container">
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 5H13M3 9H13M3 13H13M17 5L21 9L17 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3 5H13M3 9H13M3 13H13M17 5L21 9L17 13" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <h1 class="logo-text">日中翻訳</h1>
             </div>
@@ -29,31 +34,30 @@
                 <div class="section-header">
                     <div class="language-badge japanese">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                            <path d="M12 3V21M3 12H21" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                            <path d="M12 3V21M3 12H21" stroke="currentColor" stroke-width="2" />
                         </svg>
                         <span>日本語</span>
                     </div>
                     <span class="char-count" id="charCount">0 文字</span>
                 </div>
-                
-                <textarea 
-                    id="japaneseInput" 
-                    class="input-textarea" 
+
+                <textarea id="japaneseInput" class="input-textarea"
                     placeholder="日本語のビジネス文章を入力してください...&#10;&#10;例：&#10;お世話になっております。&#10;この度は貴社の製品についてお問い合わせさせていただきます。"
-                    rows="10"
-                ></textarea>
-                
+                    rows="10"></textarea>
+
                 <div class="action-buttons">
                     <button id="clearBtn" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M6 18L18 6M6 6L18 18" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
                         </svg>
                         クリア
                     </button>
                     <button id="translateBtn" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         翻訳する
                         <span class="loading-spinner"></span>
@@ -64,7 +68,8 @@
             <div class="divider">
                 <div class="divider-icon">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                 </div>
             </div>
@@ -73,26 +78,32 @@
                 <div class="section-header">
                     <div class="language-badge chinese">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                            <path d="M12 7V17M9 10H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                            <path d="M12 7V17M9 10H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         </svg>
                         <span>中文</span>
                     </div>
                     <button id="copyBtn" class="copy-btn" style="display: none;">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
-                            <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" />
+                            <path
+                                d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5"
+                                stroke="currentColor" stroke-width="2" />
                         </svg>
                         コピー
                     </button>
                 </div>
-                
+
                 <div id="outputContainer" class="output-container">
                     <div class="placeholder-content">
-                        <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                         <p>翻訳結果がここに表示されます</p>
                     </div>
@@ -103,17 +114,18 @@
 
         <div id="errorMessage" class="error-message" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
             <span id="errorText"></span>
         </div>
 
         <footer class="footer">
-            <p>Powered by n8n AI Translation Workflow</p>
+            <p>Powered by Nebula Infinity AI Solutions</p>
         </footer>
     </main>
 
     <script src="script.js"></script>
 </body>
+
 </html>
